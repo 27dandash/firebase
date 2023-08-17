@@ -1,0 +1,18 @@
+{
+  "login": "login",
+  "hi": "hi",
+  "no_account": "Dont have an account?",
+  "register": "Register Now",
+  "email": "Email",
+  "pass": "Password",
+  "username": "User Name",
+  "phone": "Phone",
+  "yse_account": "Already have an account",
+  "logindone": "Login Success",
+  "loginerror": "Login Error Please Try Again",
+  "loginload": "Loading",
+  "updatedata": "Update Data",
+  "uploaditem": "Upload Item"
+
+
+}
