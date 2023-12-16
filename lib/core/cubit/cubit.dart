@@ -8,11 +8,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:social_app/core/components/components.dart';
 import 'package:social_app/core/cubit/state.dart';
+import 'package:social_app/core/model/id_model.dart';
 import 'package:social_app/core/model/item_model.dart';
+import 'package:social_app/core/model/message_model.dart';
 import 'package:social_app/core/model/user_model.dart';
 import 'package:social_app/features/add_item/add_item.dart';
 import 'package:social_app/features/cart/cart.dart';
-import 'package:social_app/features/register/signup.dart';
+import 'package:social_app/features/chat/all_users_acconts.dart';
 import 'package:social_app/features/setting/setting%20screen.dart';
 import '../../features/Home/Home.dart';
 import '../../translation.dart';
@@ -35,7 +37,7 @@ class AppCubit extends Cubit<AppStates> {
  اعمل pagination  للداتا افللي بتيجي ال Home
 
 */
-  UserModel? userDataModel;
+  // UserModel? userDataModel;
   ItemModel? itemModel;
   ItemModel? cartModel;
 
@@ -44,16 +46,25 @@ class AppCubit extends Cubit<AppStates> {
   int currentIndex = 0;
   int? maxLines;
   bool seeMore = true;
+  bool x = true;
+
+  void changevisibility() {
+    x = !x;
+
+    emit(ShowMoreState());
+  }
 
   List<Widget> bottomScreen = [
     // const HomeScreen(),
     const HomeScreen(),
-    New(),
+    users_home(),
+    Add_item(),
     CartScreen(),
     const Setting()
   ];
   List<String> Titels = [
     'Items',
+    'Users',
     'Add',
     'Cart',
     'Setting',
@@ -83,7 +94,6 @@ class AppCubit extends Cubit<AppStates> {
 // ---------------------------------------- language
   void changeLanguage() async {
     isRtl = !isRtl;
-
     CacheHelper.saveData(key: 'isRtl', value: isRtl);
     String translation = await rootBundle
         .loadString('assets/translations/${isRtl ? 'ar' : 'en'}.json');
@@ -139,7 +149,27 @@ class AppCubit extends Cubit<AppStates> {
     emit(InternetState());
   }
 
+//////////////////////////////////////////////descriptionView                                      (Done)
+
+  void descriptionView() {
+    if (seeMore) {
+      maxLines = null;
+      seeMore = false;
+      emit(ShowMoreState());
+    } else {
+      maxLines = 6;
+      seeMore = true;
+      emit(ShowMoreState());
+    }
+  }
+
 //////////////////////////////////////////////How to  Get one image from Firebase                  (Done)
+
+  void GetOneImage() {
+    FirebaseFirestore.instance.collection('item').doc('aa').get().then((value) {
+      itemModel = ItemModel.fromJson(value.data()!);
+    }).catchError((error) {});
+  }
 
 ///////////////////////////////////////////////////////////////Get All User Data from Firebase         (Done)
 
@@ -152,11 +182,9 @@ class AppCubit extends Cubit<AppStates> {
         .doc(token)
         .get()
         .then((value) {
-      print('============data=============${value.data()!}');
-      userDataModel = UserModel.fromJson(value.data()!);
-      print('============img=============');
-      print(userDataModel!.img);
-      print(userDataModel!.uId);
+      debugPrint('============data=============${value.data()!}');
+      userModel = UserModel.fromJson(value.data()!);
+
       emit(SocialGetUserDataSuccessState());
     }).catchError((error) {
       emit(SocialGetUserDataErrorState(error.toString()));
@@ -164,6 +192,28 @@ class AppCubit extends Cubit<AppStates> {
   }
 
 /////////////////////////////////////////////////////////////////Get All Images from Firebase         (Done)
+
+  List<ItemModel> itemlist = [];
+
+  void GetAllItems() {
+    itemlist = [];
+    emit(SocialGetImageLoadState());
+    FirebaseFirestore.instance
+        .collection('item')
+// .doc()
+        .get()
+        .then((value) {
+      value.docs.forEach((value) {
+        // if (value.data()['uId'] != userModel!.uId) {
+        itemModel = ItemModel.fromJson(value.data());
+        itemlist.add(itemModel!);
+        // print('=================data================== ${itemModel!.itemname!}');
+      });
+      emit(SocialGetImageSuccessState());
+    }).catchError((error) {
+      emit(SocialGetImageErrorState(error.toString()));
+    });
+  }
 
 ///////////////////////////////////////////////////////////// Update User Data
 
@@ -177,10 +227,10 @@ class AppCubit extends Cubit<AppStates> {
     UserModel model = UserModel(
       name: name,
       phone: phone,
-      email: userDataModel!.email,
-      img: img ?? userDataModel!.img,
+      email: userModel!.email,
+      img: img ?? userModel!.img,
       password: password,
-      uId: userDataModel!.uId,
+      uId: userModel!.uId,
     );
 
     FirebaseFirestore.instance
@@ -245,7 +295,7 @@ class AppCubit extends Cubit<AppStates> {
     });
   }
 
-/////////////////////////////////////////////////////////////// Pick Item Image              (Done)
+/////////////////////////////////////////////////////////////// Pick Item Image 1             (Done)
   final itempicker = ImagePicker();
   File? itemImage;
 
@@ -264,15 +314,42 @@ class AppCubit extends Cubit<AppStates> {
     }
   }
 
-//////////////////////////////////////////////////////////Remove Picked Item Image         (Done)
+  /////////////////////////////////////////////////////////////// Pick Item Image 2            (Done)
+  File? itemImage2;
+
+  Future<void> getitemImage2() async {
+    final pickedFile = await itempicker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      itemImage2 = File(pickedFile.path);
+      print('#################################3');
+      print(itemImage2!.path);
+      emit(SocialCoverImagePickedSuccessState());
+    } else {
+      showToast(message: 'No Image Selected', toastStates: ToastStates.ERROR);
+      print('No Image Selected');
+
+      emit(SocialCoverImagePickedErrorState('error'));
+    }
+  }
+
+//////////////////////////////////////////////////////////Remove Picked Item Image 1        (Done)
   void removeitemphoto() {
     itemImage = null;
     emit(RemoveImageState());
   }
 
+  //////////////////////////////////////////////////////////Remove Picked Item Image 2       (Done)
+  void removeitemphoto2() {
+    itemImage2 = null;
+    emit(RemoveImageState());
+  }
+
+  // IconData suffix = Icons.visibility_off_outlined;
+  bool isPassword = true;
+
 ////////////////////////////////////////////////////////////// Upload Item Image         (Done)
 
-  Future<String> uploadimage() async {
+  Future<String> uploaditemimage() async {
     var snapshot = await firebase_storage.FirebaseStorage.instance
         .ref()
         .child('item/${Uri.file(itemImage!.path).pathSegments.last}')
@@ -280,54 +357,51 @@ class AppCubit extends Cubit<AppStates> {
     return await snapshot.ref.getDownloadURL();
   }
 
-  void uploaditemImage({
-    required String name,
-    required String phone,
-    required String password,
-  }) {
-    emit(SocialUploadItemImageLoadingState());
-
-    //     // emit(SocialUploadCoverImageSuccessState());
-    //     print(value);
-    //     updateUser(name: name, phone: phone, img: value, password: password);
-    //     emit(SocialUploadItemImageSuccessState());
-    //   }).catchError((error) {
-    //     emit(SocialUploadItemImageErrorState(error.toString()));
-    //
-    //     print(error.toString());
-    //   });
-    // }).catchError((error) {
-    //   emit(SocialUploadItemImageErrorState(error.toString()));
-    //
-    //   print(error.toString());
-    // });
-  }
-
 //////////////////////////////////////////////////////////////// Upload New Item Data
   Future<void> uploaditem({
     required String name,
     required String Description,
-    String? img,
+    required String type,
+    required String price,
+    String? photo1,
   }) async {
     emit(SocialUploadNewItemLoadState());
-    String imgurl = await uploadimage();
+    String imgurl = await uploaditemimage();
     print(imgurl);
-    print('@@@@@@@@@@@@@@@@@@@@@@');
     ItemModel model = ItemModel(
       itemname: name,
       itemdescribtion: Description,
       itemimg: imgurl,
+      type: type,
+      price: price,
+      photo1:
+          'https://th.bing.com/th/id/OIP.QEFNA8eb-0yFAtnQRBhnywHaLG?pid=ImgDet&rs=1',
+      photo2:
+          'https://th.bing.com/th/id/R.2702e38c6e4f9f442ac78672f04a9f2b?rik=lHZy2W3RyQ0bvA&pid=ImgRaw&r=0',
+      photo3:
+          'https://th.bing.com/th/id/R.d6f6421e5db0a10e369a6646517e1c6b?rik=K8tN5lszqey7zQ&pid=ImgRaw&r=0',
     );
-    await FirebaseFirestore.instance
+    FirebaseFirestore.instance
         .collection('item')
+        // اي لاومه ال doc
+        .doc()
+        .collection('more')
         .doc(token)
-        .set(model.toMap())
-        .then((value) {
-      emit(SocialUploadNewItemSuccessState());
-    }).catchError((error) {
-      print(error.toString());
-      emit(SocialUploadNewItemErrorState(error.toString()));
-    });
+        .set(
+            {
+          'photo':
+              'https://th.bing.com/th/id/OIP.2QQF_qIerhVaDfIef6G7fwHaFj?pid=ImgDet&rs=1'
+        },
+            await FirebaseFirestore.instance
+                .collection('item')
+                .doc()
+                .set(model.toMap())
+                .then((value) {
+              emit(SocialUploadNewItemSuccessState());
+            }).catchError((error) {
+              print(error.toString());
+              emit(SocialUploadNewItemErrorState(error.toString()));
+            }));
   }
 
   void addtocrt(ItemModel model) {
@@ -349,7 +423,8 @@ class AppCubit extends Cubit<AppStates> {
         // if (value.data()['uId'] != userModel!.uId) {
         cart.add(ItemModel.fromJson(value.data()));
         cartModel = ItemModel.fromJson(value.data());
-        print('===============cartModel==================== ${cartModel?.itemname}');
+        // print(
+        //     '===============cartModel==================== ${cartModel?.itemname}');
         // }
       });
       emit(SocialGetcartSuccessState());
@@ -358,32 +433,193 @@ class AppCubit extends Cubit<AppStates> {
     });
   }
 
-  void GetOneImage() {
-    FirebaseFirestore.instance.collection('item').doc('aa').get().then((value) {
-      itemModel = ItemModel.fromJson(value.data()!);
-    }).catchError((error) {});
+  List<UserModel> allusers = [];
+
+  void getAllUsers() {
+    // if(users.length==0)   //users بردو بنفي ليسته
+    allusers = [];
+    FirebaseFirestore.instance.collection('user').get().then((value) {
+      value.docs.forEach((element) {
+        if (element.data()['uId'] != token) {
+          // if (element.data()['uId'] != userModel!.uId) {
+          allusers.add(UserModel.fromJson(element.data()));
+          //
+          // print("allusershere");
+          // print(userModel?.uId);
+          // print(allusers);
+        }
+      });
+      emit(SocialGetUserDataSuccessState());
+    }).catchError((onError) {
+      emit(SocialGetUserDataErrorState(onError.toString()));
+      print(onError.toString());
+    });
   }
 
-  List<ItemModel> item = [];
+  //----------------------------------GetSmartImages------------------------------Done
+  List<ItemModel> smartitem = [];
 
-  void GetImages() {
-    item = [];
+  void GetSmartImages() {
+    smartitem = [];
     emit(SocialGetImageLoadState());
     FirebaseFirestore.instance
         .collection('item')
 // .doc()
+        .where('type', isEqualTo: 'smart')
         .get()
         .then((value) {
       value.docs.forEach((value) {
         // if (value.data()['uId'] != userModel!.uId) {
-        item.add(ItemModel.fromJson(value.data()));
+        smartitem.add(ItemModel.fromJson(value.data()));
         itemModel = ItemModel.fromJson(value.data());
-        // print('=================================== ${itemModel?.itemname}');
+        print('=================================== smartitem');
+        print('=================================== ${itemModel?.itemname}');
+        print('=================================== ${itemModel?.itemimg}');
+        // print('=================================== ${itemModel![value][1]}');
+
         // }
       });
       emit(SocialGetImageSuccessState());
     }).catchError((error) {
       emit(SocialGetImageErrorState(error.toString()));
+    });
+  }
+
+  //----------------------------------GetclothesImages------------------------------Done
+  List<ItemModel> clothesitem = [];
+
+  void GetClothesImages() {
+    clothesitem = [];
+    emit(SocialGetImageLoadState());
+    FirebaseFirestore.instance
+        .collection('item')
+// .doc()
+        .where('type', isEqualTo: 'clothes')
+        .get()
+        .then((value) {
+      value.docs.forEach((value) {
+        // if (value.data()['uId'] != userModel!.uId) {
+        clothesitem.add(ItemModel.fromJson(value.data()));
+        itemModel = ItemModel.fromJson(value.data());
+        print('=================================== clothesitem');
+        print('=================================== ${itemModel?.itemname}');
+        print('=================================== ${itemModel?.itemimg}');
+        // print('=================================== ${itemModel![value][1]}');
+
+        // }
+      });
+      emit(SocialGetImageSuccessState());
+    }).catchError((error) {
+      emit(SocialGetImageErrorState(error.toString()));
+    });
+  }
+
+  //----------------------------------Delet Item------------------------------
+
+  // void DeletItem({required String itemid}) {
+  //   FirebaseFirestore.instance
+  //       .collection('item')
+  //       .doc(itemid)
+  //       .delete()
+  //       .then((value) => {
+  //             emit(SocialDeleteItemSuccessState()),
+  //             showToast(
+  //                 message: 'Delete Done', toastStates: ToastStates.SUCCESS),
+  //           })
+  //       .catchError((onError) {
+  //     emit(SocialDeleteItemErrorState(onError.toString()));
+  //     showToast(
+  //         message: 'Error Happened While Delete',
+  //         toastStates: ToastStates.SUCCESS);
+  //   });
+  // }
+
+  //----------------------------------Delet Message------------------------------
+
+  // void DeletMessage({required String userid}) {
+  //   FirebaseFirestore.instance
+  //       .collection('user')
+  //       .doc(token)
+  //
+  //
+  //       .delete()
+  //       .then((value) => {
+  //             emit(SocialDeleteItemSuccessState()),
+  //             showToast(
+  //                 message: 'Delete Done', toastStates: ToastStates.SUCCESS),
+  //           })
+  //       .catchError((onError) {
+  //     emit(SocialDeleteItemErrorState(onError.toString()));
+  //     showToast(
+  //         message: 'Error Happened While Delete',
+  //         toastStates: ToastStates.SUCCESS);
+  //   });
+  // }
+
+  // -------------------- send Message  -------------------------------------Done
+  UserModel? userModel;
+
+  void sendMessage({
+    required String recivreId,
+    required String dateTime,
+    required String text,
+  }) {
+    MessageModel model = MessageModel(
+      text: text,
+      dateTime: dateTime,
+      recivreId: recivreId,
+      senderId: userModel!.uId,
+    );
+    FirebaseFirestore.instance
+        .collection('user')
+        .doc(userModel!.uId)
+        .collection('chats')
+        .doc(recivreId)
+        .collection('message')
+        .add(model.toMap())
+        .then((value) {
+      emit(SocialSendMessageSuccessState());
+    }).catchError((onError) {
+      emit(SocialSendMessageErrorState(onError.toString()));
+    });
+    FirebaseFirestore.instance
+        .collection('user')
+        .doc(recivreId)
+        .collection('chats')
+        .doc(userModel!.uId)
+        .collection('message')
+        .add(model.toMap())
+        .then((value) {
+      emit(SocialSendMessageSuccessState());
+    }).catchError((onError) {
+      emit(SocialSendMessageErrorState(onError.toString()));
+    });
+  }
+
+  // -------------------- Get Message  --------
+  List<MessageModel> messages = [];
+
+//جرب ترفع صوره ف صقحه الشات وتبعتها
+  void getMessages({
+    required String recivreId,
+  }) {
+    FirebaseFirestore.instance
+        .collection('user')
+        .doc(token)
+        .collection('chats')
+        .doc(recivreId)
+        .collection('message')
+        //بترتب  حسب ال Date Time
+        .orderBy('dateTime')
+        .snapshots()
+        .listen((event) {
+      messages = [];
+      print("event.docs[0]");
+      print(event.docs[0]);
+      for (var element in event.docs) {
+        messages.add(MessageModel.fromJson(element.data()));
+      }
+      emit((SocialgetMessageSuccessState()));
     });
   }
 }

@@ -207,21 +207,16 @@
 // );
 //   }
 // }
-
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:social_app/features/Home/NotificationPage.dart';
 import 'package:social_app/core/cubit/cubit.dart';
 import 'package:social_app/core/cubit/state.dart';
 import 'package:social_app/core/network/local/SharedPreferences.dart';
 import 'package:social_app/features/login/login_screen.dart';
 import 'package:social_app/features/setting/updet_user_data.dart';
-
 import '../../core/components/components.dart';
-import '../../core/components/constants.dart';
-
 class Setting extends StatefulWidget {
   const Setting({Key? key}) : super(key: key);
 
@@ -235,7 +230,7 @@ class _SettingState extends State<Setting> {
     return BlocConsumer<AppCubit, AppStates>(
       listener: (context, state) {},
       builder: (context, state) {
-        var Usermodel = AppCubit.get(context).userDataModel!.img;
+        var Usermodel = AppCubit.get(context).userModel!.img;
         var cubit = AppCubit.get(context);
 
         return Column(
@@ -253,25 +248,26 @@ class _SettingState extends State<Setting> {
                       radius: 90,
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 15,
                   ),
 
                   Center(
+                    // width: 900,
                       child: Text(
-                    cubit!.userDataModel!.name!,
-                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                        cubit.userModel!.name!,
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   )),
                   // Text(cubit!.userDataModel!.!),
-                  SizedBox(
+                  const SizedBox(
                     height: 20,
                   ),
                   defaultButton(
                       function: () {
-                        navigateTo(context, Update());
+                        navigateTo(context, const Update());
                       },
                       text: 'Change User Information'),
-                  SizedBox(
+                  const SizedBox(
                     height: 20,
                   ),
                   defaultButton(
@@ -279,7 +275,7 @@ class _SettingState extends State<Setting> {
                         AppCubit.get(context).changeLanguage();
                       },
                       text: 'Change App Language'),
-                  SizedBox(
+                  const SizedBox(
                     height: 20,
                   ),
                   defaultButton(
@@ -287,8 +283,14 @@ class _SettingState extends State<Setting> {
                         AppCubit.get(context).onchangeappmode();
                       },
                       text: 'Change Theme'),
+                  SizedBox(height: 15,),
+                  defaultButton(
+                      function: () {
+                        navigateTo(context, NotificationPage());
+                      },
+                      text: 'Active Notification'),
                   // Spacer(),
-                  SizedBox(
+                  const SizedBox(
                     height: 20,
                   ),
                   defaultButton(

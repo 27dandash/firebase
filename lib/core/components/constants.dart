@@ -24,7 +24,7 @@ void printFullText(String text) {
 }
 
 // ------------------- Translation
-bool isRtl = false;
+bool isRtl = true;
 
 TranslationModel appTranslation(context) =>AppCubit.get(context).translationModel;
 

@@ -4,6 +4,7 @@ abstract class AppStates  {}
 class AppInitialState extends AppStates {}
 
 // -------------------------------------------------- GetUserData
+class ShowMoreState extends AppStates {}
 
 class SocialGetUserDataLoadState extends AppStates {}
 class SocialGetUserDataSuccessState extends AppStates {}
@@ -72,6 +73,25 @@ class SocialGetImageErrorState extends AppStates {
   final String error;
   SocialGetImageErrorState(this.error);
 }
+// -------------------- Delete Item --------
+class SocialDeleteItemSuccessState extends AppStates{}
+class SocialDeleteItemErrorState extends AppStates{
+  final String error;
+  SocialDeleteItemErrorState(this.error);}
+// -------------------- Send Message --------
+class SocialSendMessageSuccessState extends AppStates{}
+class SocialSendMessageErrorState extends AppStates{
+  final String error;
+  SocialSendMessageErrorState(this.error);}
+
+// -------------------- get Message --------
+class SocialgetMessageSuccessState extends AppStates{}
+class SocialgetMessageErrorState extends AppStates{
+  final String error;
+  SocialgetMessageErrorState(this.error);}
+
+
+
 
 
 

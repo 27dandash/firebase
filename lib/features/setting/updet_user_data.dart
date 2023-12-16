@@ -31,10 +31,10 @@ class _UpdateState extends State<Update> {
         var cubit = AppCubit.get(context);
         var Usermodel = AppCubit
             .get(context)
-            .userDataModel!
+            .userModel!
             .img;
-        namecontroller.text = cubit.userDataModel!.name!;
-        phonecontroller.text = cubit.userDataModel!.phone!;
+        namecontroller.text = cubit.userModel!.name!;
+        phonecontroller.text = cubit.userModel!.phone!;
 
         return Scaffold(
           appBar: AppBar(

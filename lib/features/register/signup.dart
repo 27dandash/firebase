@@ -130,7 +130,7 @@ class _SignupState extends State<Signup> {
                             },
                             label:  appTranslation(context).pass,
                             prefix: Icons.lock,
-                            isPassword: SocialLoginCubit.get(context).isPassword,
+                            isPassword: SocialRegisterCubit.get(context).isPassword,
                             suffix: SocialRegisterCubit.get(context).suffix,
                             suffixPressed: (){
                             SocialRegisterCubit.get(context).changepasswordvisibility();
